@@ -1,1 +1,1 @@
-web: gunicorn -w 4 -k unicorn.workers.UvicornWorker core.api:light_novel_app
+web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker core.api:light_novel_app
