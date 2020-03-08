@@ -1,12 +1,14 @@
 import json
 
+from typing import List
 from fastapi import FastAPI, Response
+from core.light_novel_info import LightNovelInfoModel
 from core.scrap_info import get_light_novel_info
 
 light_novel_app = FastAPI()
 
 
-@light_novel_app.get("/info")
+@light_novel_app.get("/info", response_model=List[LightNovelInfoModel])
 def light_novel_info(light_novel: str, first_match: bool = True):
     """
         This will execute internally the search operation on http://lndb.info</br>
