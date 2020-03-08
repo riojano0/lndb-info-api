@@ -11,7 +11,7 @@ class LightNovelInfo:
         self.illustrator = illustrator
         self.plot = plot
         self.genre = genre
-        self.volumes = int(volumes)
+        self.volumes = volumes
         self.lndb_link = lndb_link
         self.covers = covers
 
@@ -22,6 +22,6 @@ class LightNovelInfoModel(BaseModel):
     illustrator: str
     plot: str
     genre: List[str]
-    volumes: int
+    volumes: str
     lndb_link: str
     covers: List[list]
