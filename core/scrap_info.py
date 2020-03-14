@@ -34,11 +34,13 @@ def create_light_novel_info(match, scrape_instance):
             if "Illustrator" in info_key.text:
                 light_novel_info.illustrator = info_value.text.strip()
             if "Genre" in info_key.text:
-                light_novel_info.genre = info_value.text.split(",")
+                genres = info_value.text.split(",")
+                light_novel_info.genre = [genre.lstrip() for genre in genres]
             if "Volumes" in info_key.text:
                 light_novel_info.volumes = info_value.text
 
-    cover_element_list = light_novel_page_soup.findAll("a", {"class": "highslide"})
+    cover_section = light_novel_page_soup.find("div", {"class": "lightnovelcovers"})
+    cover_element_list = cover_section.findAll("a", {"class": "highslide"}) if cover_section is not None else []
     covers = {}
     for volume_number, cover_element in enumerate(cover_element_list, start=1):
         covers[volume_number] = "http://lndb.info/{}".format(cover_element.get("href"))
@@ -50,24 +52,31 @@ def create_light_novel_info(match, scrape_instance):
 
 def get_light_novel_info(title, first_match_flag=True):
     scrape = cfscrape.create_scraper()
-    page = scrape.get("http://lndb.info/search?text={}".format(title),
+    lndb_info_query = "http://lndb.info/search?text={}".format(title)
+    logging.info("Requesting: {}".format(lndb_info_query))
+    page = scrape.get(lndb_info_query,
                       headers={"connection": "keep-alive", "host": "lndb.info"})
     search_result = bs4.BeautifulSoup(page.content, "html.parser")
 
-    light_novel_list = search_result.find("div", {"id": "bodylightnovelscontentid"})
-
-    matches = []
-    if light_novel_list is not None:
-        matches = light_novel_list.findAll("a")
-
     light_novels = []
-    if len(matches) > 0:
-        if first_match_flag:
-            match = matches[0]
-            light_novels.append(create_light_novel_info(match, scrape))
-        else:
-            for match in matches:
+    if "search?text=" in page.url:
+        light_novel_list = search_result.find("div", {"id": "bodylightnovelscontentid"})
+
+        matches = []
+        if light_novel_list is not None:
+            matches = light_novel_list.findAll("a")
+
+        if len(matches) > 0:
+            if first_match_flag:
+                match = matches[0]
                 light_novels.append(create_light_novel_info(match, scrape))
+            else:
+                for match in matches:
+                    light_novels.append(create_light_novel_info(match, scrape))
+    else:
+        # Only exist one match, and that page is returned
+        match = {"href": page.url}
+        light_novels.append(create_light_novel_info(match, scrape))
 
     return light_novels
 
